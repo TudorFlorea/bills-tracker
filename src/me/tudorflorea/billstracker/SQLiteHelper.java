@@ -93,6 +93,33 @@ public class SQLiteHelper {
         }
     }
     
+    public void deleteBillGroup(int id)
+    {
+        String sql = "DELETE FROM bill_groups WHERE id = ?";
+        try {
+            PreparedStatement pstmt = this.mConnection.prepareStatement(sql);
+            pstmt.setInt(1, id);
+            int rows = pstmt.executeUpdate();
+            System.out.println(rows + " deleted!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+        public void updateBillGroup(int id, String desctiption)
+    {
+        String sql = "UPDATE bill_groups SET description=? WHERE id = ?";
+        try {
+            PreparedStatement pstmt = this.mConnection.prepareStatement(sql);
+            pstmt.setString(1, desctiption);
+            pstmt.setInt(2, id);
+            int rows = pstmt.executeUpdate();
+            System.out.println(rows + " updated!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
     public ArrayList<BillType> selctBillTypes()
     {
         String sql = "SELECT * FROM bill_types";

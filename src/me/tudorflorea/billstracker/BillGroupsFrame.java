@@ -17,6 +17,8 @@ public class BillGroupsFrame extends javax.swing.JFrame {
 
     
     private SQLiteHelper mSQLiteHelper;
+    private ArrayList<BillGroup> mBillGroups;
+    private int mCurrentSelectionDbId = 0;
     
     /**
      * Creates new form BillGroupsFrame
@@ -30,12 +32,12 @@ public class BillGroupsFrame extends javax.swing.JFrame {
     
     private void fillBillGroupsFrame()
     {
-        ArrayList<BillGroup> billGroups = new ArrayList<>();
+        mBillGroups = new ArrayList<>();
         DefaultListModel defaultListModel = new DefaultListModel();
         
-        billGroups = mSQLiteHelper.selctBillGroups();
+        mBillGroups = mSQLiteHelper.selctBillGroups();
         
-        for(BillGroup billGroup: billGroups)
+        for(BillGroup billGroup: mBillGroups)
         {
             defaultListModel.addElement(billGroup.getDescription());
         }
@@ -69,6 +71,7 @@ public class BillGroupsFrame extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("BillGroups");
 
+        jLabel1.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Bill Groups");
 
@@ -76,6 +79,11 @@ public class BillGroupsFrame extends javax.swing.JFrame {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
+        });
+        billGroupsList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                billGroupsListValueChanged(evt);
+            }
         });
         jScrollPane1.setViewportView(billGroupsList);
 
@@ -89,8 +97,18 @@ public class BillGroupsFrame extends javax.swing.JFrame {
         });
 
         editBillGroupButton.setText("Edit");
+        editBillGroupButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                editBillGroupButtonActionPerformed(evt);
+            }
+        });
 
         deleteBillGroupButton.setText("Delete");
+        deleteBillGroupButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteBillGroupButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -149,6 +167,38 @@ public class BillGroupsFrame extends javax.swing.JFrame {
             System.err.println("TEXT IS EMPTY");
         }
     }//GEN-LAST:event_addBillGroupButtonActionPerformed
+
+    private void billGroupsListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_billGroupsListValueChanged
+        // TODO add your handling code here:
+        if (billGroupsList.getSelectedIndex() != -1) {
+            System.out.println("Selected id " + billGroupsList.getSelectedIndex());
+            mCurrentSelectionDbId = mBillGroups.get(billGroupsList.getSelectedIndex()).getId();
+            System.out.println("DB ID: " + mCurrentSelectionDbId);
+            currentBillGroupTextField.setText(mBillGroups.get(billGroupsList.getSelectedIndex()).getDescription()); 
+        }
+
+    }//GEN-LAST:event_billGroupsListValueChanged
+
+    private void deleteBillGroupButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBillGroupButtonActionPerformed
+        // TODO add your handling code here:
+        if(mCurrentSelectionDbId != 0)
+        {
+            mSQLiteHelper.deleteBillGroup(mCurrentSelectionDbId);
+            fillBillGroupsFrame();
+            mCurrentSelectionDbId = 0;
+            currentBillGroupTextField.setText("");
+        }
+    }//GEN-LAST:event_deleteBillGroupButtonActionPerformed
+
+    private void editBillGroupButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBillGroupButtonActionPerformed
+        // TODO add your handling code here:
+        String newDesctiption = currentBillGroupTextField.getText();
+        if(!newDesctiption.isEmpty() && mCurrentSelectionDbId != -1)
+        {
+            mSQLiteHelper.updateBillGroup(mCurrentSelectionDbId, newDesctiption);
+            fillBillGroupsFrame();
+        }
+    }//GEN-LAST:event_editBillGroupButtonActionPerformed
 
     /**
      * @param args the command line arguments
