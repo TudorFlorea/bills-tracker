@@ -30,6 +30,11 @@ public class BillGroupsFrame extends javax.swing.JFrame {
         fillBillGroupsFrame();
     }
     
+    public ArrayList<BillGroup> getBillGroups()
+    {
+        return this.mBillGroups;
+    }
+    
     private void fillBillGroupsFrame()
     {
         mBillGroups = new ArrayList<>();
@@ -45,6 +50,7 @@ public class BillGroupsFrame extends javax.swing.JFrame {
         billGroupsList.setModel(defaultListModel);
         
     }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -68,8 +74,8 @@ public class BillGroupsFrame extends javax.swing.JFrame {
 
         jButton3.setText("jButton3");
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("BillGroups");
+        setAlwaysOnTop(true);
 
         jLabel1.setFont(new java.awt.Font("SansSerif", 1, 18)); // NOI18N
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
@@ -123,14 +129,14 @@ public class BillGroupsFrame extends javax.swing.JFrame {
                         .addComponent(jScrollPane2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(addBillGroupButton, javax.swing.GroupLayout.PREFERRED_SIZE, 170, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(currentBillGroupTextField))
+                    .addComponent(currentBillGroupTextField)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGap(0, 70, Short.MAX_VALUE)
+                        .addComponent(editBillGroupButton, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(deleteBillGroupButton, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 69, Short.MAX_VALUE)))
                 .addContainerGap())
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(76, Short.MAX_VALUE)
-                .addComponent(editBillGroupButton, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(deleteBillGroupButton, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(75, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -193,7 +199,7 @@ public class BillGroupsFrame extends javax.swing.JFrame {
     private void editBillGroupButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBillGroupButtonActionPerformed
         // TODO add your handling code here:
         String newDesctiption = currentBillGroupTextField.getText();
-        if(!newDesctiption.isEmpty() && mCurrentSelectionDbId != -1)
+        if(!newDesctiption.isEmpty() && mCurrentSelectionDbId != 0)
         {
             mSQLiteHelper.updateBillGroup(mCurrentSelectionDbId, newDesctiption);
             fillBillGroupsFrame();
