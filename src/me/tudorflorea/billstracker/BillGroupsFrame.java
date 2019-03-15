@@ -7,6 +7,7 @@ package me.tudorflorea.billstracker;
 
 import java.util.ArrayList;
 import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
 import me.tudorflorea.billstracker.data.BillGroup;
 
 /**
@@ -19,13 +20,15 @@ public class BillGroupsFrame extends javax.swing.JFrame {
     private SQLiteHelper mSQLiteHelper;
     private ArrayList<BillGroup> mBillGroups;
     private int mCurrentSelectionDbId = 0;
+    private BillsTracker mBillsTracker;
     
     /**
      * Creates new form BillGroupsFrame
      */
     
-    public BillGroupsFrame() {
-        mSQLiteHelper = new SQLiteHelper();
+    public BillGroupsFrame(SQLiteHelper helper, BillsTracker tracker) {
+        mSQLiteHelper = helper;
+        mBillsTracker = tracker;
         initComponents();
         fillBillGroupsFrame();
     }
@@ -169,8 +172,13 @@ public class BillGroupsFrame extends javax.swing.JFrame {
              mSQLiteHelper.insertBillGroup(billGroupDescription);
              fillBillGroupsFrame();
              this.addBillGroupTextPane.setText("");
+             mBillsTracker.fillBillGroups();
         } else {
             System.err.println("TEXT IS EMPTY");
+            JOptionPane.showMessageDialog(this,
+                "Please fill all the fileds!",
+                "Error.",
+                JOptionPane.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_addBillGroupButtonActionPerformed
 
@@ -181,7 +189,7 @@ public class BillGroupsFrame extends javax.swing.JFrame {
             mCurrentSelectionDbId = mBillGroups.get(billGroupsList.getSelectedIndex()).getId();
             System.out.println("DB ID: " + mCurrentSelectionDbId);
             currentBillGroupTextField.setText(mBillGroups.get(billGroupsList.getSelectedIndex()).getDescription()); 
-        }
+        } 
 
     }//GEN-LAST:event_billGroupsListValueChanged
 
@@ -192,7 +200,11 @@ public class BillGroupsFrame extends javax.swing.JFrame {
             mSQLiteHelper.deleteBillGroup(mCurrentSelectionDbId);
             fillBillGroupsFrame();
             mCurrentSelectionDbId = 0;
+            mBillsTracker.fillBillGroups();
             currentBillGroupTextField.setText("");
+        } else {
+            
+            
         }
     }//GEN-LAST:event_deleteBillGroupButtonActionPerformed
 
@@ -203,6 +215,12 @@ public class BillGroupsFrame extends javax.swing.JFrame {
         {
             mSQLiteHelper.updateBillGroup(mCurrentSelectionDbId, newDesctiption);
             fillBillGroupsFrame();
+            mBillsTracker.fillBillGroups();
+        } else {
+                JOptionPane.showMessageDialog(this,
+                "Please fill all the fileds!",
+                "Error.",
+                JOptionPane.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_editBillGroupButtonActionPerformed
 
@@ -236,7 +254,7 @@ public class BillGroupsFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new BillGroupsFrame().setVisible(true);
+                new BillGroupsFrame(new SQLiteHelper(), null).setVisible(true);
             }
         });
     }

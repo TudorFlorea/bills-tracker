@@ -20,6 +20,8 @@ public class SQLiteHelper {
     private final String CONNECTION_STRING = "jdbc:sqlite:BillsTracker.db";
     
     private Connection mConnection;
+    private String mLastQuery = null;
+    private int[] mLastParams = null;
     
     public SQLiteHelper()
     {
@@ -220,6 +222,7 @@ public class SQLiteHelper {
         
     }
     
+   
     public void insertBillType(String description, int billGroupId)
     {
         String sql = "INSERT INTO bill_types (description, bill_group_id) values (?, ?)";
@@ -263,17 +266,105 @@ public class SQLiteHelper {
         }
     }
     
-    public ArrayList<Bill> selectBills()
+    public ArrayList<Bill> reQueryBills()
+    {
+        System.out.println(mLastQuery);
+        if(mLastQuery != null || !mLastQuery.isEmpty()) {
+            if(mLastParams != null && mLastParams.length > 0) {
+                System.out.println("Prepared query");
+                return selectBills( preparedQuery(mLastQuery, mLastParams) );
+            } else {
+                System.out.println("simple query");
+                return selectBills( simpleQuery(mLastQuery) );
+            }
+        } else {
+            return selectAllBills();
+        }
+    }
+    
+    public ArrayList<Bill> selectAllBills()
     {
         String sql =    "SELECT bills.id, bills.description, bills.paid, bills.amount, bills.due_date, bills.paid_date, bills.bill_type_id, bill_types.description AS bill_type_description, bill_groups.id AS bill_group_id, bill_groups.description AS bill_group_description " +
-                        "FROM bills, bill_types, bill_groups " +
-                        "WHERE bills.bill_type_id = bill_types.id AND bill_groups.id = bill_types.bill_group_id";
+                "FROM bills, bill_types, bill_groups " +
+                "WHERE bills.bill_type_id = bill_types.id AND bill_groups.id = bill_types.bill_group_id";
+        mLastQuery = sql;
+        mLastParams = null;
+        return selectBills( simpleQuery(sql) );
+    }
+    
+    public ArrayList<Bill> selectBillsByBillGroup(int billGroupId)
+    {
+        String sql =    "SELECT bills.id, bills.description, bills.paid, bills.amount, bills.due_date, bills.paid_date, bills.bill_type_id, bill_types.description AS bill_type_description, bill_groups.id AS bill_group_id, bill_groups.description AS bill_group_description " +
+            "FROM bills, bill_types, bill_groups " +
+            "WHERE bills.bill_type_id = bill_types.id AND bill_groups.id = bill_types.bill_group_id AND bill_groups.id=?";
+        int[] params = new int[] {billGroupId};
+
+        mLastQuery = sql;
+        mLastParams = params;
+
+        return selectBills( preparedQuery(sql, params) );
+    }
+    
+    public ArrayList<Bill> selectBillsByBillType(int billTypeId)
+    {
+        String sql =    "SELECT bills.id, bills.description, bills.paid, bills.amount, bills.due_date, bills.paid_date, bills.bill_type_id, bill_types.description AS bill_type_description, bill_groups.id AS bill_group_id, bill_groups.description AS bill_group_description " +
+            "FROM bills, bill_types, bill_groups " +
+            "WHERE bills.bill_type_id = bill_types.id AND bill_groups.id = bill_types.bill_group_id AND bill_types.id=?";
+        int[] params = new int[] {billTypeId};
+            
+        mLastQuery = sql;
+        mLastParams = params;
+            
+        return selectBills( preparedQuery(sql, params) );
+    }
+    
+    public ArrayList<Bill> selectBillsByBillGroupAndType(int billGroupId, int billTypeId)
+    {
+        String sql =    "SELECT bills.id, bills.description, bills.paid, bills.amount, bills.due_date, bills.paid_date, bills.bill_type_id, bill_types.description AS bill_type_description, bill_groups.id AS bill_group_id, bill_groups.description AS bill_group_description " +
+            "FROM bills, bill_types, bill_groups " +
+            "WHERE bills.bill_type_id = bill_types.id AND bill_groups.id = bill_types.bill_group_id AND bill_groups.id=? AND bill_types.id=? ";
+        int[] params = new int[] {billGroupId, billTypeId};
+            
+        mLastQuery = sql;
+        mLastParams = params;
+            
+        return selectBills( preparedQuery(sql, params) );
+    }    
+    
+    private ResultSet simpleQuery(String sql)
+    {
+        try {
+            Statement stmt = mConnection.createStatement();
+            return stmt.executeQuery(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        
+    }
+    
+    private ResultSet preparedQuery(String sql, int[] nums) {
+        try {
+            PreparedStatement pstmt = mConnection.prepareStatement(sql);
+            
+            for(int i = 0; i < nums.length; i++)
+            {
+                pstmt.setInt(i + 1, nums[i]);
+            }
+            return pstmt.executeQuery();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    public ArrayList<Bill> selectBills(ResultSet rs)
+    {
         ArrayList<Bill> bills = new ArrayList<>();
         
         try
         {
-            Statement stmt = mConnection.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+            
             int id;
             String billDescription;
             double billAmount;
@@ -300,7 +391,7 @@ public class SQLiteHelper {
 //                System.out.println(billAmount);
 //                System.out.println(billDueDate);
 //                System.out.println(billPaidDate);
-                System.out.println(billPaied);
+//                System.out.println(billPaied);
 //                System.out.println(billTypeId);
 //                System.out.println(billGroupId);
 //                System.out.println(billTypedDescription);
@@ -369,7 +460,7 @@ public class SQLiteHelper {
     
     public static void main(String[] args) {
         SQLiteHelper app = new SQLiteHelper();
-        app.selectBills();
+        app.selectAllBills();
         //app.selctBillTypes();
     }
     

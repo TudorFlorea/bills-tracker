@@ -8,9 +8,11 @@ package me.tudorflorea.billstracker;
 import java.util.ArrayList;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
+import me.tudorflorea.billstracker.csv.CsvWriter;
 import me.tudorflorea.billstracker.data.Bill;
 import me.tudorflorea.billstracker.data.BillGroup;
 import me.tudorflorea.billstracker.data.BillType;
@@ -43,8 +45,9 @@ public class BillsTracker extends javax.swing.JFrame {
     public BillsTracker() {
         initComponents();
         mSQLiteHelper = new SQLiteHelper();
-        mBillGroupsFrame = new BillGroupsFrame();
-        mBillTypesFrame = new BillTypesFrame();
+        mBills = mSQLiteHelper.selectAllBills();
+        mBillGroupsFrame = new BillGroupsFrame(mSQLiteHelper, this);
+        mBillTypesFrame = new BillTypesFrame(mSQLiteHelper, this);
         fillBillGroups();
         fillBillTypes();
         fillCurrentBillTypes();
@@ -107,7 +110,7 @@ public class BillsTracker extends javax.swing.JFrame {
         //add()
     }
     
-    private void fillBillGroups()
+    public void fillBillGroups()
     {
         DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
         ArrayList<BillGroup> billGroups = this.mBillGroupsFrame.getBillGroups();
@@ -118,10 +121,10 @@ public class BillsTracker extends javax.swing.JFrame {
         }
   
         this.billGroupsComboBox.setModel(model);
- 
+        mBillTypesFrame.fillBillGroupsList();
     }
     
-    private void fillBillTypes()
+    public void fillBillTypes()
     {
         DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
         ArrayList<BillType> billtypes = this.mBillTypesFrame.getBillTypes();
@@ -132,10 +135,10 @@ public class BillsTracker extends javax.swing.JFrame {
         }
   
         this.billTypesComboBox.setModel(model);
- 
+        
     }
     
-    private void fillCurrentBillTypes()
+    public void fillCurrentBillTypes()
     {
         DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
         ArrayList<BillType> billtypes = this.mBillTypesFrame.getBillTypes();
@@ -152,9 +155,7 @@ public class BillsTracker extends javax.swing.JFrame {
     public void fillBillsTable()
     {
         
-        mBills = mSQLiteHelper.selectBills();
-        
-         DefaultTableModel dtm = new DefaultTableModel(0, 0);
+        DefaultTableModel dtm = new DefaultTableModel(0, 0);
 
         // add header of the table
         String header[] = new String[] { ID_COLUMN, DESCRIPTION_COLUMN, DUE_DATE_COLUMN, PAID_COLUMN, AMOUNT_COLUMN, PAID_DATE_COLUMN, BILL_TYPE_COLUMN, BILL_GROUP_COLUMN };
@@ -226,6 +227,7 @@ public class BillsTracker extends javax.swing.JFrame {
         addBillButton = new javax.swing.JButton();
         editBillButton = new javax.swing.JButton();
         deleteBillButton = new javax.swing.JButton();
+        exportToCsvButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Bills Tracker");
@@ -237,6 +239,11 @@ public class BillsTracker extends javax.swing.JFrame {
 
         billGroupsComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         billGroupsComboBox.setName(""); // NOI18N
+        billGroupsComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                billGroupsComboBoxActionPerformed(evt);
+            }
+        });
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Bill Groups");
@@ -250,10 +257,15 @@ public class BillsTracker extends javax.swing.JFrame {
         });
 
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel3.setText("Bill TYpes");
+        jLabel3.setText("Bill Types");
 
         billTypesComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         billTypesComboBox.setName(""); // NOI18N
+        billTypesComboBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                billTypesComboBoxActionPerformed(evt);
+            }
+        });
 
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/me/tudorflorea/billstracker/settings_icon.png"))); // NOI18N
         jButton2.setToolTipText("");
@@ -325,6 +337,13 @@ public class BillsTracker extends javax.swing.JFrame {
             }
         });
 
+        exportToCsvButton.setText("Export to CSV");
+        exportToCsvButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exportToCsvButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -337,7 +356,7 @@ public class BillsTracker extends javax.swing.JFrame {
                         .addComponent(jScrollPane1)
                         .addContainerGap())
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 161, Short.MAX_VALUE)
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(billGroupsComboBox, 0, 130, Short.MAX_VALUE)
                             .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, 230, Short.MAX_VALUE))
@@ -349,7 +368,7 @@ public class BillsTracker extends javax.swing.JFrame {
                             .addComponent(billTypesComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 50, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 166, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(filler1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(33, 33, 33))
                     .addGroup(layout.createSequentialGroup()
@@ -384,15 +403,17 @@ public class BillsTracker extends javax.swing.JFrame {
                                 .addComponent(jLabel10, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(billTypeComboBox, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                        .addContainerGap())))
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(addBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(100, 100, 100)
-                .addComponent(editBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(100, 100, 100)
-                .addComponent(deleteBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                        .addContainerGap())
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 193, Short.MAX_VALUE)
+                        .addComponent(addBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(100, 100, 100)
+                        .addComponent(editBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(100, 100, 100)
+                        .addComponent(deleteBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 193, Short.MAX_VALUE)
+                        .addComponent(exportToCsvButton)
+                        .addGap(33, 33, 33))))
         );
 
         layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {billGroupsComboBox, jLabel1});
@@ -455,7 +476,8 @@ public class BillsTracker extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(addBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(deleteBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(editBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(editBillButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(exportToCsvButton))
                 .addContainerGap())
         );
 
@@ -474,43 +496,139 @@ public class BillsTracker extends javax.swing.JFrame {
 
     private void addBillButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBillButtonActionPerformed
         // TODO add your handling code here:
-        String billDescription = billDescriptionTextField.getText();
-        String dueDate = billDueDateTextField.getText();
-        boolean paid = billPaidCheckBox.isSelected();
-        double amount = Double.valueOf(billAmountTextField.getText());
-        String paidDate = billPaidDateTextField.getText();
-        int billTypeIndex = billTypeComboBox.getSelectedIndex();
-        int billTypeId = mBillTypesFrame.getBillTypes().get(billTypeIndex).getId();
         
-        mSQLiteHelper.insertBill(billDescription, dueDate, paid, amount, paidDate, billTypeId);
-        fillBillsTable();
-        clearFields();
+        if(!billDescriptionTextField.getText().isEmpty() && billTypeComboBox.getSelectedIndex() != -1 && !billAmountTextField.getText().isEmpty()) {
+            String billDescription = billDescriptionTextField.getText();
+            String dueDate = billDueDateTextField.getText();
+            boolean paid = billPaidCheckBox.isSelected();
+            double amount = Double.valueOf(billAmountTextField.getText());
+            String paidDate = billPaidDateTextField.getText();
+            int billTypeIndex = billTypeComboBox.getSelectedIndex();
+            if(billTypeIndex < 0) return;
+
+            int billTypeId = mBillTypesFrame.getBillTypes().get(billTypeIndex).getId();
+
+            mSQLiteHelper.insertBill(billDescription, dueDate, paid, amount, paidDate, billTypeId);
+            mBills = mSQLiteHelper.reQueryBills();
+            fillBillsTable();
+            clearFields();
+        } else {
+            
+            JOptionPane.showMessageDialog(this,
+            "Please fill all the fileds!",
+            "Error.",
+            JOptionPane.WARNING_MESSAGE);
+        
+        }
+        
+
     }//GEN-LAST:event_addBillButtonActionPerformed
 
     private void editBillButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBillButtonActionPerformed
         // TODO add your handling code here:
-        String billDescription = billDescriptionTextField.getText();
-        String dueDate = billDueDateTextField.getText();
-        boolean paid = billPaidCheckBox.isSelected();
-        double amount = Double.valueOf(billAmountTextField.getText());
-        String paidDate = billPaidDateTextField.getText();
-        int billTypeIndex = billTypeComboBox.getSelectedIndex();
-        int billTypeId = mBillTypesFrame.getBillTypes().get(billTypeIndex).getId();
-        
-        mSQLiteHelper.updateBill(mCurrentSelectionDbId, billDescription, dueDate, paid, amount, paidDate, billTypeId);
-        fillBillsTable();
-        clearFields();
-        mCurrentSelectionDbId = 0;
+        if(!billDescriptionTextField.getText().isEmpty() && billTypeComboBox.getSelectedIndex() != -1 && !billAmountTextField.getText().isEmpty()) {
+            String billDescription = billDescriptionTextField.getText();
+            String dueDate = billDueDateTextField.getText();
+            boolean paid = billPaidCheckBox.isSelected();
+            double amount = Double.valueOf(billAmountTextField.getText());
+            String paidDate = billPaidDateTextField.getText();
+            int billTypeIndex = billTypeComboBox.getSelectedIndex();
+            int billTypeId = mBillTypesFrame.getBillTypes().get(billTypeIndex).getId();
+
+            mSQLiteHelper.updateBill(mCurrentSelectionDbId, billDescription, dueDate, paid, amount, paidDate, billTypeId);
+            mBills = mSQLiteHelper.reQueryBills();
+            fillBillsTable();
+            clearFields();
+            mCurrentSelectionDbId = 0;
+        } else {
+            JOptionPane.showMessageDialog(this,
+            "Please fill all the fileds!",
+            "Error.",
+            JOptionPane.WARNING_MESSAGE);
+        }
+
     }//GEN-LAST:event_editBillButtonActionPerformed
 
     private void deleteBillButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBillButtonActionPerformed
         // TODO add your handling code here:
         if(mCurrentSelectionDbId != 0)
             mSQLiteHelper.deleteBill(mCurrentSelectionDbId);
+        mBills = mSQLiteHelper.reQueryBills();
         fillBillsTable();
         clearFields();
         mCurrentSelectionDbId = 0;
     }//GEN-LAST:event_deleteBillButtonActionPerformed
+
+    private void billGroupsComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_billGroupsComboBoxActionPerformed
+        // TODO add your handling code here:
+        System.out.println("SELECTED BILLGROUP");
+        if(billGroupsComboBox.getSelectedIndex() == 0) {
+            mBills = mSQLiteHelper.selectAllBills();
+        } else {
+            int billGroupId = mBillGroupsFrame.getBillGroups().get(billGroupsComboBox.getSelectedIndex() - 1).getId();
+            mBills = mSQLiteHelper.selectBillsByBillGroup(billGroupId);
+        }
+        fillBillsTable();
+    }//GEN-LAST:event_billGroupsComboBoxActionPerformed
+
+    private void billTypesComboBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_billTypesComboBoxActionPerformed
+        // TODO add your handling code here:
+        
+        if(billTypesComboBox.getSelectedIndex() == 0) {
+            if(billGroupsComboBox.getSelectedIndex() == 0) {
+                mBills = mSQLiteHelper.selectAllBills();
+            } else {
+                int billGroupId = mBillGroupsFrame.getBillGroups().get(billGroupsComboBox.getSelectedIndex() - 1).getId();
+                mBills = mSQLiteHelper.selectBillsByBillGroup(billGroupId);
+            }
+        } else {
+            
+            if(billGroupsComboBox.getSelectedIndex() == 0) {
+                int billTypeId = mBillTypesFrame.getBillTypes().get(billTypesComboBox.getSelectedIndex() - 1).getId();
+                mBills = mSQLiteHelper.selectBillsByBillType(billTypeId);
+            } else {
+                int billGroupId = mBillGroupsFrame.getBillGroups().get(billGroupsComboBox.getSelectedIndex() - 1).getId();
+                int billTypeId = mBillTypesFrame.getBillTypes().get(billTypesComboBox.getSelectedIndex() - 1).getId();
+                mBills = mSQLiteHelper.selectBillsByBillGroupAndType(billGroupId, billTypeId);
+            }
+        }
+        fillBillsTable();
+    }//GEN-LAST:event_billTypesComboBoxActionPerformed
+
+    private void exportToCsvButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportToCsvButtonActionPerformed
+        // TODO add your handling code here:
+        int cols = billsTable.getColumnCount();
+        int rows = billsTable.getRowCount();
+        CsvWriter writer = new CsvWriter();
+        for(int i = 0; i < cols; i++) {
+            if(i == cols - 1) {
+                writer.appendValue(billsTable.getColumnName(i), true);
+            } else {
+                writer.appendValue(billsTable.getColumnName(i), false);
+            }
+        }
+        
+        for(int j = 0; j < rows; j++)
+        {
+            for(int k = 0; k < cols; k++)
+            {
+                if(k == cols - 1) {
+                    writer.appendValue(billsTable.getValueAt(j, k).toString(), true);
+                } else {
+                    writer.appendValue(billsTable.getValueAt(j, k).toString(), false);
+                }
+            }
+        }
+        
+        System.out.println(writer.getCsvStrin());
+        writer.save();
+        JOptionPane.showMessageDialog(this,
+            "The data has been exported successfuly!",
+            "Exported!",
+            JOptionPane.INFORMATION_MESSAGE);
+        //System.out.println(billsTable.getValueAt(1, 1));
+        
+    }//GEN-LAST:event_exportToCsvButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -567,6 +685,7 @@ public class BillsTracker extends javax.swing.JFrame {
     private javax.swing.JTable billsTable;
     private javax.swing.JButton deleteBillButton;
     private javax.swing.JButton editBillButton;
+    private javax.swing.JButton exportToCsvButton;
     private javax.swing.Box.Filler filler1;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;

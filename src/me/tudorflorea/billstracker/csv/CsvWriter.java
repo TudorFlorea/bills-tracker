@@ -33,21 +33,26 @@ public class CsvWriter {
     {
         mCsvStringBuilder.append(value);
         if(isLast) {
-            mCsvStringBuilder.append("\n");
+            mCsvStringBuilder.append("\r\n");
         } else {
             mCsvStringBuilder.append(",");
         }
+    }
+    
+    public String getCsvStrin()
+    {
+        return this.mCsvStringBuilder.toString();
     }
     
     public void save()
     {
         try {
 
-            mCvsFile = new File("bills.csv");
+            mCvsFile = new File("./bills.csv");
             mPrintWriter = new PrintWriter(mCvsFile);
-            
+            System.err.println(mCsvStringBuilder.toString());
             mPrintWriter.write(mCsvStringBuilder.toString());
-
+            mPrintWriter.close();
             System.out.println("exported!");
 
         } catch (FileNotFoundException e) {

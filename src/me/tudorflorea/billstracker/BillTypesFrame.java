@@ -8,6 +8,7 @@ package me.tudorflorea.billstracker;
 import java.util.ArrayList;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
 import me.tudorflorea.billstracker.data.BillGroup;
 import me.tudorflorea.billstracker.data.BillType;
 
@@ -22,13 +23,15 @@ public class BillTypesFrame extends javax.swing.JFrame {
     private ArrayList<BillType> mBillTypes;
     private ArrayList<BillGroup> mBillGroups;
     private int mCurrentSelectionDbId = 0;
+    private BillsTracker mBillsTracker;
     
     /**
      * Creates new form BillTypes
      */
-    public BillTypesFrame() {
+    public BillTypesFrame(SQLiteHelper helper, BillsTracker tracker) {
         initComponents();
-        mSQLiteHelper = new SQLiteHelper();
+        mSQLiteHelper = helper;
+        mBillsTracker = tracker;
         fillBillTypesList();
         fillBillGroupsList();
     }
@@ -54,7 +57,7 @@ public class BillTypesFrame extends javax.swing.JFrame {
         return this.mBillTypes;
     }
     
-    private void fillBillGroupsList()
+    public void fillBillGroupsList()
     {
         mBillGroups = new ArrayList<>();
         DefaultComboBoxModel defaultListModel = new DefaultComboBoxModel();
@@ -195,12 +198,19 @@ public class BillTypesFrame extends javax.swing.JFrame {
 
     private void addBillTypeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBillTypeButtonActionPerformed
         // TODO add your handling code here:
-        if(!currentBillTypeTextField.getText().isEmpty())
+        if(!currentBillTypeTextField.getText().isEmpty() && currentBillGroupComboBox.getSelectedIndex() != -1)
         {
             mSQLiteHelper.insertBillType(currentBillTypeTextField.getText(), mBillGroups.get(currentBillGroupComboBox.getSelectedIndex()).getId());
             fillBillTypesList();
             fillBillGroupsList();
             currentBillTypeTextField.setText("");
+            mBillsTracker.fillBillTypes();
+            mBillsTracker.fillCurrentBillTypes();
+        } else {
+                JOptionPane.showMessageDialog(this,
+                "Please fill all the fileds!",
+                "Error.",
+                JOptionPane.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_addBillTypeButtonActionPerformed
 
@@ -214,6 +224,13 @@ public class BillTypesFrame extends javax.swing.JFrame {
             currentBillTypeTextField.setText("");
             mCurrentSelectionDbId = 0;
             currentBillGroupComboBox.setSelectedIndex(-1);
+            mBillsTracker.fillBillTypes();
+            mBillsTracker.fillCurrentBillTypes();
+        } else {
+                JOptionPane.showMessageDialog(this,
+                "Please fill all the fileds!",
+                "Error.",
+                JOptionPane.WARNING_MESSAGE);
         }
     }//GEN-LAST:event_editBillTypeButtonActionPerformed
 
@@ -225,6 +242,8 @@ public class BillTypesFrame extends javax.swing.JFrame {
             fillBillTypesList();
             fillBillGroupsList();
             currentBillTypeTextField.setText("");
+            mBillsTracker.fillBillTypes();
+            mBillsTracker.fillCurrentBillTypes();
         }
     }//GEN-LAST:event_deleteBillTypeButtonActionPerformed
 
@@ -259,7 +278,7 @@ public class BillTypesFrame extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new BillTypesFrame().setVisible(true);
+                //new BillTypesFrame().setVisible(true);
             }
         });
     }
